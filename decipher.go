@@ -1,7 +1,7 @@
 package mega_link_decipher
 
 import (
-	"fmt"
+	// "fmt"
 	"errors"
 	"regexp"
 	"crypto/aes"
@@ -19,7 +19,7 @@ var (
 )
 
 func DecipherUrl(url string) (string, error) {
-	re := regexp.MustCompile("^mega://enc2\\?([A-Za-z0-9-_,]+)")
+	re := regexp.MustCompile("^mega://(f?)enc(2?)\\?([A-Za-z0-9-_,]+)")
 
 	matched := re.MatchString(url)
 	if !matched {
@@ -27,64 +27,51 @@ func DecipherUrl(url string) (string, error) {
 	}
 
 	matches := re.FindStringSubmatch(url)
-	fmt.Printf("%q\n", matches)
+	foldertag := matches[1]
+	versiontag := matches[2]
+	b64str := matches[3]
 
-	str := matches[1]
+	// link is for folder or not
+	rootUrl := "https://mega.nz/#"
+	if foldertag == "f" {
+		rootUrl += "F"
+	}
 
-	password := []byte{237, 31, 76, 32, 11, 53, 19, 152, 6, 178, 96, 86, 59, 61, 56, 118, 240, 17, 180, 117, 15, 58, 26, 74, 94, 253, 11, 190, 103, 85, 75, 68}
+	// decipher url v2
+	if versiontag == "2" {
+		deciphertext, err := decipherV2(b64str)
+		if err != nil {
+			return "", err
+		}
+		return rootUrl + deciphertext, nil
+	}
+
+	// decipher url v1
+	// TODO
+	return url, nil
+}
+
+func decipherV1(b64str string) (string, error) {
+	// key := "k1o6Al-1kz¿!z05y"
+	// iv, _ := hex.DecodeString("79F10A01844A0B27FF5B2D4E0ED3163E")
+	return b64str, nil
+}
+
+func decipherV2(b64str string) (string, error) {
+	key := []byte{237, 31, 76, 32, 11, 53, 19, 152, 6, 178, 96, 86, 59, 61, 56, 118, 240, 17, 180, 117, 15, 58, 26, 74, 94, 253, 11, 190, 103, 85, 75, 68}
 	iv, _ := hex.DecodeString("79F10A01844A0B27FF5B2D4E0ED3163E")
 
-	fmt.Printf("iv(decoded) => [ ")
-	for _, s := range iv {
-		fmt.Printf("%d ", s)
-	}
-	fmt.Printf("]\n")
-
-	// Recover Base64 from encoded string
-	b64str := str
+	// get ciphered text
 	b64str += ("==")[((2 - len(b64str) * 3) & 3):]
-	fmt.Printf("b64str(padded) => %s\n", b64str)
-
-	// b64str = strings.Replace(b64str, "-", "+", -1)
-	// b64str = strings.Replace(b64str, "_", "/", -1)
-	// b64str = strings.Replace(b64str, ",", "", -1)
-	// fmt.Printf("b64str(replaced) => %s\n", b64str)
-	// fmt.Printf("length of b64str => %d\n", len(b64str))
-
-	// Decoding step
 	ciphertext, err := base64.URLEncoding.DecodeString(b64str)
 	if err != nil {
 		return "", err
 	}
 
-	// warr := byteArrayToWordArray(ciphertext)
-	// fmt.Printf("ciphertext(word array) => [ ")
-	// for _, s := range warr {
-	// 	fmt.Printf("%d ", s)
-	// }
-	// fmt.Printf("]\n")
-
-	// key := byteArrayToWordArray(password)
-	// fmt.Printf("key(word array) => [ ")
-	// for _, s := range key {
-	// 	fmt.Printf("%d ", s)
-	// }
-	// fmt.Printf("]\n")
-
-	// try cryptor/aes
-	block, err := aes.NewCipher(password)
-	if err != nil {
-		return "", err
-	}
-
+	// decipher
+	block, _ := aes.NewCipher(key)
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(ciphertext, ciphertext)
-	fmt.Printf("deciphered text => %s\n", ciphertext)
-	fmt.Printf("deciphertext => [ ")
-	for _, s := range ciphertext {
-		fmt.Printf("%d ", s)
-	}
-	fmt.Printf("]\n")
 
 	// unpad(pksc7)
 	c := ciphertext[len(ciphertext) - 1]
@@ -98,15 +85,6 @@ func DecipherUrl(url string) (string, error) {
 		}
 	}
 
-	deciphered := string(ciphertext[:len(ciphertext)-n])
-
-	return "https://mega.nz/#" + deciphered, nil
+	deciphertext := string(ciphertext[:len(ciphertext)-n])
+	return deciphertext, nil
 }
-
-// func byteArrayToWordArray(arr []byte) []int32 {
-// 	warr := make([]int32, (len(arr) + 1) / 4)
-// 	for i := 0; i < len(arr); i++ {
-// 		warr[(i / 4) | 0] |= int32(arr[i]) << uint32(24 - 8 * (i % 4))
-// 	}
-// 	return warr
-// }
