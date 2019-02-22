@@ -16,8 +16,8 @@ To install the command-line tool
 go install github.com/yistLin/megadecipher/cmd/mega-decipher
 ```
 
-To decipher a link
+To decipher a link (make sure you have `$GOPATH` configured and have `$GOPATH/bin` in your `$PATH`)
 
 ```bash
-mega-decipher "mega://enc2?a_ciphered_url_here"
+mega-decipher "mega://enc2?a_ciphered_url_here_is_just_an_example"
 ```
