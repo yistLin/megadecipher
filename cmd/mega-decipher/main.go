@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"log"
+	"os"
 
 	decipher "github.com/yistLin/megadecipher"
 )
@@ -16,5 +16,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println("Original link =>", decipheredUrl)
 }
