@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"log"
 
-	decipher "github.com/yistLin/mega_link_decipher"
+	decipher "github.com/yistLin/megadecipher"
 )
 
 func main() {
 	url := os.Args[1]
 	fmt.Println("Ciphered link =>", url)
 
-	decipheredUrl, err := decipher.DecipherUrl(url)
+	decipheredUrl, err := decipher.Decipher(url)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package mega_link_decipher
+package megadecipher
 
 import (
 	// "fmt"
@@ -18,7 +18,7 @@ var (
 	ErrInvalidPKCS7Padding = errors.New("invalid PKCS7 padding on input")
 )
 
-func DecipherUrl(url string) (string, error) {
+func Decipher(url string) (string, error) {
 	re := regexp.MustCompile("^mega://(f?)enc(2?)\\?([A-Za-z0-9-_,]+)")
 
 	matched := re.MatchString(url)
